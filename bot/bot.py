@@ -39,19 +39,21 @@ async def bot_shutdown() -> None:
 # =============================================================================
 
 
-@bot.on_(factories().DeployedNewAuction)
-async def on_deployed_new_auction(event) -> None:  # type: ignore
-    auction = Contract(event.auction)
-    deployer = Contract(event.sender)
-    want = Contract(event.want)
+for factory in factories():
 
-    # Multicall for symbol + receiver
-    want_symbol, receiver_addr = multicall.Call().add(want.symbol).add(auction.receiver)()
+    @bot.on_(factory.DeployedNewAuction, start_block="23068435")
+    async def on_deployed_new_auction(event) -> None:  # type: ignore
+        auction = Contract(event.auction)
+        deployer = Contract(event.sender)
+        want = Contract(event.want)
 
-    await notify_group_chat(
-        f"👀 <b>New Auction Deployed!</b>\n\n"
-        f"<b>Want:</b> {want_symbol}\n"
-        f"<b>Receiver:</b> {safe_name(Contract(receiver_addr))}\n"
-        f"<b>Deployer:</b> {safe_name(deployer)}\n\n"
-        f"<a href='{explorer_base_url()}{auction.address}'>🔗 View Auction</a>"
-    )
+        # Multicall for symbol + receiver
+        want_symbol, receiver_addr = multicall.Call().add(want.symbol).add(auction.receiver)()
+
+        await notify_group_chat(
+            f"👀 <b>New Auction Deployed!</b>\n\n"
+            f"<b>Want:</b> {want_symbol}\n"
+            f"<b>Receiver:</b> {safe_name(Contract(receiver_addr))}\n"
+            f"<b>Deployer:</b> {safe_name(deployer)}\n\n"
+            f"<a href='{explorer_base_url()}{auction.address}'>🔗 View Auction</a>"
+        )

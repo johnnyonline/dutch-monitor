@@ -41,10 +41,8 @@ def cfg() -> NetworkCfg:
     return NETWORKS.get(chain_key(), NETWORKS["ethereum"])
 
 
-# def factories() -> list[ContractInstance]:
-# return [Contract(addr) for addr in cfg()["factories"]]
-def factories() -> ContractInstance:  # return the first factory for now
-    return cast(ContractInstance, Contract(cfg()["factories"][0]))
+def factories() -> list[ContractInstance]:
+    return [Contract(addr) for addr in cfg()["factories"]]
 
 
 def explorer_base_url() -> str:
