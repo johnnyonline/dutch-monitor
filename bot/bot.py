@@ -41,7 +41,7 @@ async def bot_shutdown() -> None:
 
 for factory in factories():
 
-    @bot.on_(factory.DeployedNewAuction, start_block="23068435")
+    @bot.on_(factory.DeployedNewAuction)
     async def on_deployed_new_auction(event) -> None:  # type: ignore
         auction = Contract(event.auction)
         deployer = Contract(event.sender)
