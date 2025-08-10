@@ -1,0 +1,15 @@
+services:
+  eth-ykicks:
+    build: .
+    container_name: eth-ykicks
+    volumes: [".:/app", "/app/.venv"]
+    working_dir: /app
+    command: >
+      bash -c "
+      uv venv --clear &&
+      . .venv/bin/activate &&
+      uv sync &&
+      export $(grep -v '^#' .env | xargs) &&
+      silverback run --network :mainnet
+      "
+    restart: unless-stopped
