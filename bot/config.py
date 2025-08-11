@@ -42,15 +42,19 @@ def cfg() -> NetworkCfg:
 
 
 def factories() -> list[ContractInstance]:
-    return [Contract(addr) for addr in cfg()["factories"]]
+    return [Contract(address) for address in cfg()["factories"]]
+
+
+def auctions(factory: ContractInstance) -> list[ContractInstance]:
+    return [Contract(address) for address in factory.getAllAuctions()]
 
 
 def explorer_base_url() -> str:
     return cfg()["explorer"]
 
 
-def known_address_name(addr: str) -> str:
-    return cfg()["known_addresses"].get(addr.lower(), addr)
+def known_address_name(address: str) -> str:
+    return cfg()["known_addresses"].get(address.lower(), address)
 
 
 def safe_name(address: str) -> str:

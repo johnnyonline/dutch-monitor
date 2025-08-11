@@ -1,9 +1,10 @@
 from ape import Contract, chain
+from ape.contracts.base import ContractInstance
 from ape.types import ContractLog
 from ape_ethereum import multicall
 from silverback import SilverbackBot, StateSnapshot
 
-from bot.config import chain_key, explorer_base_url, factories, safe_name
+from bot.config import auctions, chain_key, explorer_base_url, factories, safe_name
 from bot.tg import ERROR_GROUP_CHAT_ID, notify_group_chat
 
 # =============================================================================
@@ -26,11 +27,19 @@ async def bot_startup(startup_state: StateSnapshot) -> None:
         chat_id=ERROR_GROUP_CHAT_ID,
     )
 
-    # # FOR TESTS
-    # for factory in factories():
-    #     logs = list(factory.DeployedNewAuction.range(22745429, 22978002))
-    #     for log in logs:
-    #         await on_deployed_new_auction(log)
+    # FOR TESTS
+    for factory in factories():
+        # # TEST on_deployed_new_auction
+        # logs = list(factory.DeployedNewAuction.range(22745429, 22978002))
+        # for log in logs:
+        #     await on_deployed_new_auction(log)
+
+        # TEST on_auction_kicked
+        for auction in auctions(factory):
+            event = auction._events_["AuctionKicked"][0]
+            logs = list(event.range(23120295, 23120559))
+            for log in logs:
+                await on_auction_kicked(log, auction=auction)
 
 
 @bot.on_shutdown()
@@ -67,3 +76,27 @@ for factory in factories():
             f"<b>Deployer:</b> {safe_name(deployer_addr)}\n\n"
             f"<a href='{explorer_base_url()}{auction.address}'>🔗 View Auction</a>"
         )
+
+    for auction in auctions(factory):
+
+        @bot.on_(auction._events_["AuctionKicked"][0])  # For some strange reason can't use `auction.AuctionKicked`
+        async def on_auction_kicked(event: ContractLog, auction: ContractInstance = auction) -> None:
+            from_token = Contract(event.get("from"))
+            available = int(event.available)
+
+            # Get the want token
+            want = Contract(auction.want())
+
+            # Multicall for symbol + decimals
+            call = multicall.Call()
+            call.add(from_token.symbol)
+            call.add(from_token.decimals)
+            call.add(want.symbol)
+            from_symbol, from_decimals, want_symbol = call()
+
+            await notify_group_chat(
+                f"🥾 <b>Auction kicked!</b>\n\n"
+                f"<b>Swap:</b> {from_symbol} ➙ {want_symbol}\n"
+                f"<b>Available:</b> {available / (10 ** int(from_decimals)):.2f} {from_symbol}\n\n"
+                f"<a href='{explorer_base_url()}{auction.address}'>🔗 View Auction</a>"
+            )
