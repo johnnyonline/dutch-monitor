@@ -1,4 +1,5 @@
-from ape import Contract
+from ape import Contract, chain
+from ape.types import ContractLog
 from ape_ethereum import multicall
 from silverback import SilverbackBot, StateSnapshot
 
@@ -42,10 +43,14 @@ async def bot_shutdown() -> None:
 for factory in factories():
 
     @bot.on_(factory.DeployedNewAuction)
-    async def on_deployed_new_auction(event) -> None:  # type: ignore
+    async def on_deployed_new_auction(event: ContractLog) -> None:
+        print(event)
         auction = Contract(event.auction)
-        deployer = Contract(event.sender)
         want = Contract(event.want)
+
+        # Figure out the deployer address
+        receipt = chain.provider.get_receipt(event.transaction_hash)
+        deployer_addr = receipt.sender
 
         # Multicall for symbol + receiver
         want_symbol, receiver_addr = multicall.Call().add(want.symbol).add(auction.receiver)()
@@ -53,7 +58,7 @@ for factory in factories():
         await notify_group_chat(
             f"👀 <b>New Auction Deployed!</b>\n\n"
             f"<b>Want:</b> {want_symbol}\n"
-            f"<b>Receiver:</b> {safe_name(Contract(receiver_addr))}\n"
-            f"<b>Deployer:</b> {safe_name(deployer)}\n\n"
+            f"<b>Receiver:</b> {safe_name(receiver_addr)}\n"
+            f"<b>Deployer:</b> {safe_name(deployer_addr)}\n\n"
             f"<a href='{explorer_base_url()}{auction.address}'>🔗 View Auction</a>"
         )

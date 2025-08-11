@@ -53,8 +53,8 @@ def known_address_name(addr: str) -> str:
     return cfg()["known_addresses"].get(addr.lower(), addr)
 
 
-def safe_name(contract: ContractInstance) -> str:
+def safe_name(contract: str) -> str:
     try:
-        return cast(str, contract.name())
+        return cast(str, Contract(contract).name())
     except Exception:
-        return known_address_name(contract.address)
+        return known_address_name(contract)
