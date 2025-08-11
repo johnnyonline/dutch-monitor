@@ -26,11 +26,17 @@ async def bot_startup(startup_state: StateSnapshot) -> None:
         chat_id=ERROR_GROUP_CHAT_ID,
     )
 
+    # # FOR TESTS
+    # for factory in factories():
+    #     logs = list(factory.DeployedNewAuction.range(22745429, 22978002))
+    #     for log in logs:
+    #         await on_deployed_new_auction(log)
+
 
 @bot.on_shutdown()
 async def bot_shutdown() -> None:
     await notify_group_chat(
-        f"🔴  <b>{chain_key()} yKicks bot shutdown successfully</b>",
+        f"🔴 🥾 <b>{chain_key()} yKicks bot shutdown successfully</b>",
         chat_id=ERROR_GROUP_CHAT_ID,
     )
 
@@ -44,7 +50,6 @@ for factory in factories():
 
     @bot.on_(factory.DeployedNewAuction)
     async def on_deployed_new_auction(event: ContractLog) -> None:
-        print(event)
         auction = Contract(event.auction)
         want = Contract(event.want)
 

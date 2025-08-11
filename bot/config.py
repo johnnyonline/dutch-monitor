@@ -1,7 +1,7 @@
 from collections.abc import Mapping, Sequence
 from typing import TypedDict, cast
 
-from ape import Contract, chain
+from ape import Contract, chain, networks
 from ape.contracts.base import ContractInstance
 
 
@@ -53,8 +53,20 @@ def known_address_name(addr: str) -> str:
     return cfg()["known_addresses"].get(addr.lower(), addr)
 
 
-def safe_name(contract: str) -> str:
+def safe_name(address: str) -> str:
+    # Try contract name
     try:
-        return cast(str, Contract(contract).name())
+        return str(Contract(address).name())
     except Exception:
-        return known_address_name(contract)
+        pass
+
+    # Try ENS
+    try:
+        ens_name = networks.active_provider.web3.ens.name(address)
+        if ens_name:
+            return str(ens_name)
+    except Exception:
+        pass
+
+    # Fallback
+    return known_address_name(address)
