@@ -1,5 +1,7 @@
 # dutch-monitor
 
+[**Join on Telegram**](https://t.me/+C_9jGhcXCm8zYTFk)
+
 ## Installation
 
 1. **Clone the repository**
