@@ -17,18 +17,19 @@ NETWORKS: Mapping[str, NetworkCfg] = {
             "0xCfA510188884F199fcC6e750764FAAbE6e56ec40",
             "0xa3A3702d81Fd317FA1B8735227e29dc756C976C5",
         ],
-        "explorer": "https://etherscan.io/address/",
+        "explorer": "https://etherscan.io/",
         "known_addresses": {
             "0xEf77cc176c748d291EfB6CdC982c5744fC7211c8": "yRoboTreasury",
             "0x16388463d60FFE0661Cf7F1f31a7D658aC790ff7": "SMS",
             "0x9008D19f58AAbD9eD0D60971565AA8510560ab41": "Mooo 🐮",
+            "0x1DA3902C196446dF28a2b02Bf733cA31A00A161b": "TradeHandler",
         },
     },
     "base": {
         "factories": [
             "0xCfA510188884F199fcC6e750764FAAbE6e56ec40",
         ],
-        "explorer": "https://basescan.org/address/",
+        "explorer": "https://basescan.org/",
         "known_addresses": {},
     },
 }
@@ -54,8 +55,12 @@ def enabled(auction: ContractInstance) -> list[ContractInstance]:
     return [Contract(address) for address in auction.getAllEnabledAuctions()]
 
 
-def explorer_base_url() -> str:
-    return cfg()["explorer"]
+def explorer_address_url() -> str:
+    return cfg()["explorer"] + "address/"
+
+
+def explorer_tx_url() -> str:
+    return cfg()["explorer"] + "tx/"
 
 
 def known_address_name(address: str) -> str:
