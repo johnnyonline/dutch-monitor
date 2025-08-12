@@ -1,7 +1,7 @@
 services:
-  eth-ykicks:
+  eth-dutch-monitor:
     build: .
-    container_name: eth-ykicks
+    container_name: eth-dutch-monitor
     volumes: [".:/app", "/app/.venv"]
     working_dir: /app
     command: >

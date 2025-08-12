@@ -1,11 +1,11 @@
-# yKicks
+# dutch-monitor
 
 ## Installation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/johnnyonline/yKicks.git
-   cd yKicks
+   git clone https://github.com/johnnyonline/dutch-monitor.git
+   cd dutch-monitor
    ```
 
 2. **Set up virtual environment**
