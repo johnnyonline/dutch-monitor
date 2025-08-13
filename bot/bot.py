@@ -188,15 +188,15 @@ for factory in factories():
 
 
 @bot.cron(EXPIRED_AUCTION_CRON)
-async def report_status(time: datetime) -> None:
+async def check_expired_with_available(time: datetime) -> None:
     # Skip if no active auctions
     if not bot.state.active_auctions:
         return
 
-    # Build multicall for all `available(from_token.address)`
+    # Build multicall for all `kickable(from_token.address)`
     call = multicall.Call()
     for auction, from_token in bot.state.active_auctions:
-        call.add(auction.available, from_token.address)
+        call.add(auction.kickable, from_token.address)
 
     # Execute multicall
     results = call()
