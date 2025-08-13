@@ -2,7 +2,6 @@ import os
 from datetime import datetime
 
 from ape import Contract, chain
-from ape.contracts.base import ContractInstance
 from ape.types import ContractLog
 from ape_ethereum import multicall
 from silverback import SilverbackBot, StateSnapshot
@@ -50,7 +49,7 @@ async def bot_startup(startup_state: StateSnapshot) -> None:
     #         event = auction._events_["AuctionKicked"][0]
     #         logs = list(event.range(23120295, 23120559))
     #         for log in logs:
-    #             await on_auction_kicked(log, auction=auction)
+    #             await on_auction_kicked(log)
 
     # # TEST on_auction_take
     # for factory in factories():
@@ -60,7 +59,7 @@ async def bot_startup(startup_state: StateSnapshot) -> None:
     #             logs = list(event.range(23126809, 23126811))
     #             for log in logs:
     #                 if log.get(event.abi.inputs[0].name) == auction.address:
-    #                     await on_auction_take(log, auction=auction, token=token)
+    #                     await on_auction_take(log, token=token)
 
 
 @bot.on_shutdown()
@@ -101,7 +100,8 @@ for factory in factories():
     for auction in auctions(factory):
 
         @bot.on_(auction._events_["AuctionKicked"][0])  # For some strange reason can't use auction.AuctionKicked
-        async def on_auction_kicked(event: ContractLog, auction: ContractInstance = auction) -> None:
+        async def on_auction_kicked(event: ContractLog) -> None:
+            auction = Contract(event.contract_address)
             from_token = Contract(event.get("from"))
             available = int(event.available)
 
@@ -133,13 +133,15 @@ for factory in factories():
             first_arg = event.abi.inputs[0].name  # from/_from/sender/whatever else smart devs thought of
 
             @bot.on_(event, filter_args={first_arg: auction.address})
-            async def on_auction_take(
-                event: ContractLog,
-                auction: ContractInstance = auction,
-                token: ContractInstance = token,
-            ) -> None:
-                # Who took + how much
-                _, taker, amount = (event.get(event.abi.inputs[i].name) for i in range(3))
+            async def on_auction_take(event: ContractLog) -> None:
+                # From and who took + how much
+                auction, taker, amount = (event.get(event.abi.inputs[i].name) for i in range(3))
+
+                # The from token
+                token = Contract(event.contract_address)
+
+                # Initialize the auction variable
+                auction = Contract(auction)
 
                 # Get the want token
                 want = Contract(auction.want())
