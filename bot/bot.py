@@ -27,7 +27,7 @@ EXPIRED_AUCTION_CRON = os.getenv("EXPIRED_AUCTION_CRON", "0 * * * *")  # every h
 @bot.on_startup()
 async def bot_startup(startup_state: StateSnapshot) -> None:
     await notify_group_chat(
-        f"🟢 🥾 <b>{chain_key()} yKicks bot started successfully</b>",
+        f"🟢 🥾 <b>{chain_key()} dutch bot started successfully</b>",
         chat_id=ERROR_GROUP_CHAT_ID,
     )
 
@@ -65,7 +65,7 @@ async def bot_startup(startup_state: StateSnapshot) -> None:
 @bot.on_shutdown()
 async def bot_shutdown() -> None:
     await notify_group_chat(
-        f"🔴 🥾 <b>{chain_key()} yKicks bot shutdown successfully</b>",
+        f"🔴 🥾 <b>{chain_key()} dutch bot shutdown successfully</b>",
         chat_id=ERROR_GROUP_CHAT_ID,
     )
 
