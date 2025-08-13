@@ -23,6 +23,7 @@ NETWORKS: Mapping[str, NetworkCfg] = {
             "0x16388463d60FFE0661Cf7F1f31a7D658aC790ff7": "SMS",
             "0x9008D19f58AAbD9eD0D60971565AA8510560ab41": "Mooo 🐮",
             "0x1DA3902C196446dF28a2b02Bf733cA31A00A161b": "TradeHandler",
+            "0x84483314d2AD44Aa96839F048193CE9750AA66B0": "gekko",
         },
     },
     "base": {
