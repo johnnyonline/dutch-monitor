@@ -2,14 +2,16 @@ services:
   eth-dutch-monitor:
     build: .
     container_name: eth-dutch-monitor
-    volumes: [".:/app", "/app/.venv"]
+    volumes:
+      - .:/app
+      - /app/.venv
     working_dir: /app
+    env_file: .env
     command: >
-      bash -c "
-      uv venv --clear &&
-      . .venv/bin/activate &&
-      uv sync &&
-      export $(grep -v '^#' .env | xargs) &&
-      silverback run --network :mainnet
+      bash -lc "
+        uv venv --clear &&
+        . .venv/bin/activate &&
+        uv sync &&
+        silverback run --network :mainnet
       "
     restart: unless-stopped

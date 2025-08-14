@@ -403,7 +403,7 @@ name = "cytoolz"
 version = "1.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "toolz" },
+    { name = "toolz", marker = "implementation_name == 'cpython'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a7/f9/3243eed3a6545c2a33a21f74f655e3fcb5d2192613cd3db81a93369eb339/cytoolz-1.0.1.tar.gz", hash = "sha256:89cc3161b89e1bb3ed7636f74ed2e55984fd35516904fc878cae216e42b2c7d6", size = 626652, upload-time = "2024-12-13T05:47:36.672Z" }
 wheels = [
@@ -453,6 +453,31 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/43/fa/6d96a0978d19e17b68d634497769987b16c8f4cd0a7a05048bec693caa6b/decorator-5.2.1.tar.gz", hash = "sha256:65f266143752f734b0a7cc83c46f4618af75b8c5911b00ccb61d0ac9b6da0360", size = 56711, upload-time = "2025-02-24T04:41:34.073Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4e/8c/f3147f5c4b73e7550fe5f9352eaa956ae838d5c51eb58e7a25b9f3e2643b/decorator-5.2.1-py3-none-any.whl", hash = "sha256:d316bb415a2d9e2d2b3abcc4084c6502fc09240e292cd76a76afc106a1c8e04a", size = 9190, upload-time = "2025-02-24T04:41:32.565Z" },
+]
+
+[[package]]
+name = "dutch-monitor"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "ape-etherscan" },
+    { name = "eth-ape" },
+    { name = "mypy" },
+    { name = "python-dotenv" },
+    { name = "python-telegram-bot" },
+    { name = "ruff" },
+    { name = "silverback" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "ape-etherscan", specifier = "==0.8.4" },
+    { name = "eth-ape", specifier = "==0.8.36" },
+    { name = "mypy", specifier = "==1.15.0" },
+    { name = "python-dotenv", specifier = "==1.1.0" },
+    { name = "python-telegram-bot", specifier = "==22.0" },
+    { name = "ruff", specifier = "==0.11.5" },
+    { name = "silverback", specifier = "==0.7.27" },
 ]
 
 [[package]]
@@ -2311,31 +2336,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/07/3c/70df5034e6712fcc238b76f6afd1871de143a2a124d80ae2c377cde180f3/yaspin-3.1.0.tar.gz", hash = "sha256:7b97c7e257ec598f98cef9878e038bfa619ceb54ac31d61d8ead2b3128f8d7c7", size = 36791, upload-time = "2024-09-22T17:07:09.376Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/89/78/fa25b385d9f2c406719b5cf574a0980f5ccc6ea1f8411d56249f44acd3c2/yaspin-3.1.0-py3-none-any.whl", hash = "sha256:5e3d4dfb547d942cae6565718123f1ecfa93e745b7e51871ad2bbae839e71b73", size = 18629, upload-time = "2024-09-22T17:07:06.923Z" },
-]
-
-[[package]]
-name = "ykicks"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "ape-etherscan" },
-    { name = "eth-ape" },
-    { name = "mypy" },
-    { name = "python-dotenv" },
-    { name = "python-telegram-bot" },
-    { name = "ruff" },
-    { name = "silverback" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "ape-etherscan", specifier = "==0.8.4" },
-    { name = "eth-ape", specifier = "==0.8.36" },
-    { name = "mypy", specifier = "==1.15.0" },
-    { name = "python-dotenv", specifier = "==1.1.0" },
-    { name = "python-telegram-bot", specifier = "==22.0" },
-    { name = "ruff", specifier = "==0.11.5" },
-    { name = "silverback", specifier = "==0.7.27" },
 ]
 
 [[package]]
