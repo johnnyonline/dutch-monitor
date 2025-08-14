@@ -25,6 +25,7 @@ NETWORKS: Mapping[str, NetworkCfg] = {
             "0x1DA3902C196446dF28a2b02Bf733cA31A00A161b": "TradeHandler",
             "0x84483314d2AD44Aa96839F048193CE9750AA66B0": "gekko",
             "0x5CECc042b2A320937c04980148Fc2a4b66Da0fbF": "gekko",
+            "0xb911Fcce8D5AFCEc73E072653107260bb23C1eE8": "Yearn veCRV Fee Burner",
         },
     },
     "base": {
