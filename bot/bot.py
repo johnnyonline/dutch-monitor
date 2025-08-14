@@ -32,8 +32,7 @@ async def bot_startup(startup_state: StateSnapshot) -> None:
     )
 
     # Set `bot.state` values
-    if not hasattr(startup_state, "active_auctions") or startup_state.active_auctions is None:
-        bot.state.active_auctions = []
+    bot.state.active_auctions = []
 
     # TESTS
 
@@ -84,16 +83,16 @@ for factory in factories():
 
         # Figure out the deployer address
         receipt = chain.provider.get_receipt(event.transaction_hash)
-        deployer_addr = receipt.sender
+        deployer = receipt.sender
 
         # Multicall for symbol + receiver
-        want_symbol, receiver_addr = multicall.Call().add(want.symbol).add(auction.receiver)()
+        want_symbol, receiver = multicall.Call().add(want.symbol).add(auction.receiver)()
 
         await notify_group_chat(
             f"👀 <b>New Auction Deployed!</b>\n\n"
             f"<b>Want:</b> {want_symbol}\n"
-            f"<b>Receiver:</b> {safe_name(receiver_addr)}\n"
-            f"<b>Deployer:</b> {safe_name(deployer_addr)}\n\n"
+            f"<b>Receiver:</b> {safe_name(receiver)}\n"
+            f"<b>Deployer:</b> {safe_name(deployer)}\n\n"
             f"<a href='{explorer_address_url()}{auction.address}'>🔗 View Auction</a>"
         )
 
