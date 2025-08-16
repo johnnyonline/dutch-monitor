@@ -16,6 +16,7 @@ NETWORKS: Mapping[str, NetworkCfg] = {
         "factories": [
             "0xCfA510188884F199fcC6e750764FAAbE6e56ec40",
             "0xa3A3702d81Fd317FA1B8735227e29dc756C976C5",
+            "0xa076c247AfA44f8F006CA7f21A4EF59f7e4dc605",
         ],
         "explorer": "https://etherscan.io/",
         "known_addresses": {
