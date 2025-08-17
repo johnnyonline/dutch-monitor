@@ -22,6 +22,16 @@ EXPIRED_AUCTION_CRON = os.getenv("EXPIRED_AUCTION_CRON", "0 * * * *")  # every h
 
 
 # =============================================================================
+# Helpers
+# =============================================================================
+
+
+async def debug(msg: str) -> None:
+    print(f"DEBUG: {msg}. Time: {datetime.now()}")
+    await notify_group_chat(f"DEBUG: {msg}", chat_id=ERROR_GROUP_CHAT_ID)
+
+
+# =============================================================================
 # Startup / Shutdown
 # =============================================================================
 
@@ -49,8 +59,8 @@ async def bot_startup(startup_state: StateSnapshot) -> None:
     # for factory in factories():
     #     for auction in auctions(factory):
     #         event = auction._events_["AuctionKicked"][0]
-    #         # logs = list(event.range(23120295, 23120559))
-    #         logs = list(event.range(23148631, 23148633))  # legacy factory
+    #         logs = list(event.range(23120295, 23120559))
+    #         # logs = list(event.range(23148631, 23148633))  # legacy factory
     #         for log in logs:
     #             await on_auction_kicked(log)
 
@@ -82,6 +92,8 @@ for factory in factories():
 
     @bot.on_(factory.DeployedNewAuction)
     async def on_deployed_new_auction(event: ContractLog) -> None:
+        await debug("working on on_deployed_new_auction...")
+
         auction = Contract(event.auction)
         want = Contract(event.want)
 
@@ -104,6 +116,8 @@ for factory in factories():
 
         @bot.on_(auction._events_["AuctionKicked"][0])  # For some strange reason can't use auction.AuctionKicked
         async def on_auction_kicked(event: ContractLog) -> None:
+            await debug("working on on_auction_kicked...")
+
             auction = Contract(event.contract_address)
             from_token = Contract(event.get("from"))
             available = int(event.available)
@@ -137,6 +151,8 @@ for factory in factories():
 
             @bot.on_(event, filter_args={first_arg: auction.address})
             async def on_auction_take(event: ContractLog) -> None:
+                await debug("working on on_auction_take...")
+
                 # From and who took + how much
                 auction, taker, amount = (event.get(event.abi.inputs[i].name) for i in range(3))
 
