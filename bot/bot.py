@@ -5,6 +5,7 @@ from ape import Contract, chain
 from ape.types import ContractLog
 from ape_ethereum import multicall
 from silverback import SilverbackBot, StateSnapshot
+from silverback.exceptions import CircuitBreaker
 
 from bot.config import auctions, chain_key, enabled, explorer_address_url, explorer_tx_url, factories, safe_name
 from bot.tg import ERROR_GROUP_CHAT_ID, notify_group_chat
@@ -16,6 +17,7 @@ from bot.tg import ERROR_GROUP_CHAT_ID, notify_group_chat
 
 bot = SilverbackBot()
 
+DAILY_RESTART_CRON = os.getenv("DAILY_RESTART_CRON", "30 13 * * *")  # every day at 13:30 UTC
 EXPIRED_AUCTION_CRON = os.getenv("EXPIRED_AUCTION_CRON", "0 * * * *")  # every hour
 
 
@@ -36,7 +38,7 @@ async def bot_startup(startup_state: StateSnapshot) -> None:
 
     # TESTS
 
-    # # # TEST on_deployed_new_auction
+    # # TEST on_deployed_new_auction
     # for factory in factories():
     #     # logs = list(factory.DeployedNewAuction.range(22745429, 22978002))
     #     logs = list(factory.DeployedNewAuction.range(21378342, 21378344))  # legacy factory
@@ -186,6 +188,13 @@ for factory in factories():
 # =============================================================================
 # Cron Jobs
 # =============================================================================
+
+
+@bot.cron(DAILY_RESTART_CRON)
+async def daily_restart(time: datetime) -> None:
+    # Trigger bot shutdown so it restarts and re-subscribes to include any newly deployed auctions
+    # NOTE: The actual restart happens only because our docker compose is configured to restart the container on exit
+    raise CircuitBreaker("New auction deployed, restarting bot to subscribe.")
 
 
 @bot.cron(EXPIRED_AUCTION_CRON)
