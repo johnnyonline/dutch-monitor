@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from typing import Any, Dict, cast
 
 from ape import Contract, chain
 from ape.types import ContractLog
@@ -22,16 +23,6 @@ EXPIRED_AUCTION_CRON = os.getenv("EXPIRED_AUCTION_CRON", "0 * * * *")  # every h
 
 
 # =============================================================================
-# Helpers
-# =============================================================================
-
-
-async def debug(msg: str) -> None:
-    print(f"DEBUG: {msg}. Time: {datetime.now()}")
-    await notify_group_chat(f"DEBUG: {msg}", chat_id=ERROR_GROUP_CHAT_ID)
-
-
-# =============================================================================
 # Startup / Shutdown
 # =============================================================================
 
@@ -51,7 +42,8 @@ async def bot_startup(startup_state: StateSnapshot) -> None:
     # # TEST on_deployed_new_auction
     # for factory in factories():
     #     # logs = list(factory.DeployedNewAuction.range(22745429, 22978002))
-    #     logs = list(factory.DeployedNewAuction.range(21378342, 21378344))  # legacy factory
+    #     # logs = list(factory.DeployedNewAuction.range(21378342, 21378344))  # legacy factory
+    #     logs = list(factory.DeployedNewAuction.range(358476615, 358476617))  # arbi
     #     for log in logs:
     #         await on_deployed_new_auction(log)
 
@@ -59,8 +51,9 @@ async def bot_startup(startup_state: StateSnapshot) -> None:
     # for factory in factories():
     #     for auction in auctions(factory):
     #         event = auction._events_["AuctionKicked"][0]
-    #         logs = list(event.range(23120295, 23120559))
+    #         # logs = list(event.range(23120295, 23120559))
     #         # logs = list(event.range(23148631, 23148633))  # legacy factory
+    #         logs = list(event.range(23156665, 23156667))
     #         for log in logs:
     #             await on_auction_kicked(log)
 
@@ -117,10 +110,21 @@ for factory in factories():
         @bot.on_(auction._events_["AuctionKicked"][0])  # For some strange reason can't use auction.AuctionKicked
         async def on_auction_kicked(event: ContractLog) -> None:
             await debug("working on on_auction_kicked...")
+            print(event)
 
+            # Cache the auction contract
             auction = Contract(event.contract_address)
-            from_token = Contract(event.get("from"))
-            available = int(event.available)
+
+            # Handle weirdness of event decoding
+            try:
+                from_token = Contract(event.get("from"))
+                available = int(event.available)
+            except Exception as e:
+                print(e)
+                print("trying decode_auction_kicked...")
+                args = decode_auction_kicked(event.transaction_hash, event.log_index, event.contract_address)
+                from_token = Contract(args["from"])
+                available = int(args["available"])
 
             # Get the want token
             want = Contract(auction.want())
@@ -243,3 +247,40 @@ async def check_expired_with_available(time: datetime) -> None:
 
             # Remove from tracking
             bot.state.active_auctions.remove((auction, from_token))
+
+
+# =============================================================================
+# Helpers
+# =============================================================================
+
+
+async def debug(msg: str) -> None:
+    print(f"DEBUG: {msg}. Time: {datetime.now()}")
+    await notify_group_chat(f"DEBUG: {msg}", chat_id=ERROR_GROUP_CHAT_ID)
+
+
+def decode_auction_kicked(tx_hash: str, log_index: int, address: str) -> Dict[str, Any]:
+    from ape import networks
+    from web3._utils.events import get_event_data
+
+    AUCTION_KICKED_ABI = {
+        "anonymous": False,
+        "name": "AuctionKicked",
+        "type": "event",
+        "inputs": [
+            {"indexed": True, "name": "from", "type": "address"},
+            {"indexed": False, "name": "available", "type": "uint256"},
+        ],
+    }
+
+    w3 = networks.active_provider.web3
+    receipt = w3.eth.get_transaction_receipt(tx_hash)
+
+    try:
+        raw_log = next(
+            log for log in receipt["logs"] if log["logIndex"] == log_index and log["address"].lower() == address.lower()
+        )
+    except StopIteration:
+        raise ValueError("Matching AuctionKicked log not found in receipt")
+
+    return cast(Dict[str, Any], get_event_data(w3.codec, AUCTION_KICKED_ABI, raw_log)["args"])

@@ -36,6 +36,13 @@ NETWORKS: Mapping[str, NetworkCfg] = {
         "explorer": "https://basescan.org/",
         "known_addresses": {},
     },
+    "arbitrum": {
+        "factories": [
+            "0xCd1E4c17A5485f2a6DF1C01cC65EFDe25c951dBB",
+        ],
+        "explorer": "https://arbiscan.io/",
+        "known_addresses": {},
+    },
 }
 
 
