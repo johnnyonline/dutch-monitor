@@ -4,4 +4,13 @@ services:
     container_name: eth-dutch-monitor
     env_file: .env
     command: ["run", "--network", ":mainnet"]
+    profiles: ["eth"]
+    restart: unless-stopped
+  
+  arb-dutch-monitor:
+    build: .
+    container_name: arb-dutch-monitor
+    env_file: .env
+    command: ["run", "--network", "arbitrum:mainnet"]
+    profiles: ["arb"]
     restart: unless-stopped

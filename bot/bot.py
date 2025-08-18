@@ -18,6 +18,7 @@ from bot.tg import ERROR_GROUP_CHAT_ID, notify_group_chat
 
 bot = SilverbackBot()
 
+DEBUG = os.getenv("DEBUG", False)
 DAILY_RESTART_CRON = os.getenv("DAILY_RESTART_CRON", "30 13 * * *")  # every day at 13:30 UTC
 EXPIRED_AUCTION_CRON = os.getenv("EXPIRED_AUCTION_CRON", "0 * * * *")  # every hour
 
@@ -110,7 +111,6 @@ for factory in factories():
         @bot.on_(auction._events_["AuctionKicked"][0])  # For some strange reason can't use auction.AuctionKicked
         async def on_auction_kicked(event: ContractLog) -> None:
             await debug("working on on_auction_kicked...")
-            print(event)
 
             # Cache the auction contract
             auction = Contract(event.contract_address)
@@ -119,9 +119,7 @@ for factory in factories():
             try:
                 from_token = Contract(event.get("from"))
                 available = int(event.available)
-            except Exception as e:
-                print(e)
-                print("trying decode_auction_kicked...")
+            except Exception:
                 args = decode_auction_kicked(event.transaction_hash, event.log_index, event.contract_address)
                 from_token = Contract(args["from"])
                 available = int(args["available"])
@@ -255,8 +253,9 @@ async def check_expired_with_available(time: datetime) -> None:
 
 
 async def debug(msg: str) -> None:
-    print(f"DEBUG: {msg}. Time: {datetime.now()}")
-    await notify_group_chat(f"DEBUG: {msg}", chat_id=ERROR_GROUP_CHAT_ID)
+    if DEBUG:
+        print(f"DEBUG: {msg}. Time: {datetime.now()}")
+        await notify_group_chat(f"DEBUG: {msg}", chat_id=ERROR_GROUP_CHAT_ID)
 
 
 def decode_auction_kicked(tx_hash: str, log_index: int, address: str) -> Dict[str, Any]:
