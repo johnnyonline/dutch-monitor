@@ -14,3 +14,11 @@ services:
     command: ["run", "--network", "arbitrum:mainnet"]
     profiles: ["arb"]
     restart: unless-stopped
+  
+  base-dutch-monitor:
+    build: .
+    container_name: base-dutch-monitor
+    env_file: .env
+    command: ["run", "--network", "base:mainnet"]
+    profiles: ["base"]
+    restart: unless-stopped

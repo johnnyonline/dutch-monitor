@@ -44,7 +44,8 @@ async def bot_startup(startup_state: StateSnapshot) -> None:
     # for factory in factories():
     #     # logs = list(factory.DeployedNewAuction.range(22745429, 22978002))
     #     # logs = list(factory.DeployedNewAuction.range(21378342, 21378344))  # legacy factory
-    #     logs = list(factory.DeployedNewAuction.range(358476615, 358476617))  # arbi
+    #     # logs = list(factory.DeployedNewAuction.range(358476615, 358476617))  # arbi
+    #     logs = list(factory.DeployedNewAuction.range(34043016, 34043018))  # base
     #     for log in logs:
     #         await on_deployed_new_auction(log)
 

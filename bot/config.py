@@ -17,6 +17,7 @@ NETWORKS: Mapping[str, NetworkCfg] = {
             "0xCfA510188884F199fcC6e750764FAAbE6e56ec40",
             "0xa3A3702d81Fd317FA1B8735227e29dc756C976C5",
             "0xa076c247AfA44f8F006CA7f21A4EF59f7e4dc605",
+            "0xd8e03D6D24d43c46c0f7f61327E391316E4f3c15",
         ],
         "explorer": "https://etherscan.io/",
         "known_addresses": {
@@ -32,7 +33,7 @@ NETWORKS: Mapping[str, NetworkCfg] = {
     },
     "base": {
         "factories": [
-            "0xCfA510188884F199fcC6e750764FAAbE6e56ec40",
+            "0xd8e03D6D24d43c46c0f7f61327E391316E4f3c15",
         ],
         "explorer": "https://basescan.org/",
         "known_addresses": {},
@@ -40,6 +41,7 @@ NETWORKS: Mapping[str, NetworkCfg] = {
     "arbitrum": {
         "factories": [
             "0xCd1E4c17A5485f2a6DF1C01cC65EFDe25c951dBB",
+            "0xd8e03D6D24d43c46c0f7f61327E391316E4f3c15",
         ],
         "explorer": "https://arbiscan.io/",
         "known_addresses": {},
