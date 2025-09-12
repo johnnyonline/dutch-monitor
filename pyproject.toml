@@ -14,9 +14,14 @@ dependencies = [
     "ape-etherscan==0.8.4",
 ]
 
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["bot*"]
+exclude = ["assets*"]
+
 [tool.ruff]
 line-length = 120
-target-version = "py310"
+target-version = "py312"
 lint.select = ["E", "F", "I", "W"]  # pycodestyle, pyflakes, isort, and warnings
 fix = true
 exclude = ["__pypackages__"]
@@ -27,7 +32,6 @@ quote-style = "double"
 docstring-code-format = true
 
 [tool.mypy]
-mypy_path = "src"
 python_version = "3.12"
 ignore_missing_imports = true
 strict = true
