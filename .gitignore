@@ -46,6 +46,7 @@ cache-id.txt
 *.cache
 .uv/
 .ruff_cache
+.DS_Store
 
 # Ape stuff
 .build/
