@@ -1,5 +1,11 @@
 # dutch-monitor
 
+<p align="center">
+  <img src="assets/pfp.jpg" alt="Dutch Bot PFP" width="700" height="700"/>
+</p>
+
+## Party
+
 [**Join on Telegram**](https://t.me/+C_9jGhcXCm8zYTFk)
 
 ## Installation
