@@ -48,7 +48,7 @@ silverback run --network :mainnet
 
 Run using docker compose:
 ```shell
-docker compose up -d
+docker compose --profile eth --profile arb --profile base up -d
 ```
 
 Stop docker compose:
