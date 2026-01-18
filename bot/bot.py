@@ -151,7 +151,12 @@ for factory in factories():
 
         for token in enabled(auction):
             # Also for some strange reason can't always use token.Transfer
-            event = token._events_["Transfer"][0]
+            try:
+                event = token._events_["Transfer"][0]
+            except KeyError:
+                # Token contract may not have Transfer event in ABI (unverified contract, etc.)
+                print(f"WARNING: Token {token.address} does not have Transfer event in ABI, skipping...")
+                continue
             first_arg = event.abi.inputs[0].name  # from/_from/sender/whatever else smart devs thought of
 
             @bot.on_(event, filter_args={first_arg: auction.address})

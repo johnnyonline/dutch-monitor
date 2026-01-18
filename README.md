@@ -53,7 +53,7 @@ docker compose --profile eth --profile arb --profile base up -d
 
 Stop docker compose:
 ```shell
-docker compose down
+docker compose --profile eth --profile arb --profile base down
 ```
 
 ## Code Style
