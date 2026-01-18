@@ -53,9 +53,9 @@ async def bot_startup(startup_state: StateSnapshot) -> None:
     # for factory in factories():
     #     for auction in auctions(factory):
     #         event = auction._events_["AuctionKicked"][0]
-    #         # logs = list(event.range(23120295, 23120559))
+    #         logs = list(event.range(23120295, 23120559))
     #         # logs = list(event.range(23148631, 23148633))  # legacy factory
-    #         logs = list(event.range(23156665, 23156667))
+    #         # logs = list(event.range(412036835, 412036837))
     #         for log in logs:
     #             await on_auction_kicked(log)
 
@@ -103,7 +103,8 @@ for factory in factories():
             f"👀 <b>New Auction Deployed!</b>\n\n"
             f"<b>Want:</b> {want_symbol}\n"
             f"<b>Receiver:</b> {safe_name(receiver)}\n"
-            f"<b>Deployer:</b> {safe_name(deployer)}\n\n"
+            f"<b>Deployer:</b> {safe_name(deployer)}\n"
+            f"<b>Network:</b> {chain_key()}\n\n"
             f"<a href='{explorer_address_url()}{auction.address}'>🔗 View Auction</a>"
         )
 
@@ -138,7 +139,8 @@ for factory in factories():
             await notify_group_chat(
                 f"🥾 <b>Auction kicked!</b>\n\n"
                 f"<b>Swap:</b> {from_symbol} ➙ {want_symbol}\n"
-                f"<b>Available:</b> {available / (10 ** int(from_decimals)):.2f} {from_symbol}\n\n"
+                f"<b>Available:</b> {available / (10 ** int(from_decimals)):.2f} {from_symbol}\n"
+                f"<b>Network:</b> {chain_key()}\n\n"
                 f"<a href='{explorer_tx_url()}{event.transaction_hash}'>🔗 View Transaction</a>"
             )
 
@@ -184,7 +186,8 @@ for factory in factories():
                         f"<b>Swap:</b> {from_symbol} ➙ {want_symbol}\n"
                         f"<b>Remaining:</b> {int(available) / (10 ** int(from_decimals)):.5f} {from_symbol}\n"
                         f"<b>Taker:</b> {safe_name(taker)}\n"
-                        f"<b>Receiver:</b> {safe_name(receiver)}\n\n"
+                        f"<b>Receiver:</b> {safe_name(receiver)}\n"
+                        f"<b>Network:</b> {chain_key()}\n\n"
                         f"<a href='{explorer_tx_url()}{event.transaction_hash}'>🔗 View Transaction</a>"
                     )
                 else:
@@ -194,7 +197,8 @@ for factory in factories():
                         f"<b>Swap:</b> {from_symbol} ➙ {want_symbol}\n"
                         f"<b>Amount:</b> {amount / (10 ** int(from_decimals)):.2f} {from_symbol}\n"
                         f"<b>Taker:</b> {safe_name(taker)}\n"
-                        f"<b>Receiver:</b> {safe_name(receiver)}\n\n"
+                        f"<b>Receiver:</b> {safe_name(receiver)}\n"
+                        f"<b>Network:</b> {chain_key()}\n\n"
                         f"<a href='{explorer_tx_url()}{event.transaction_hash}'>🔗 View Transaction</a>"
                     )
 
@@ -240,7 +244,8 @@ async def check_expired_with_available(time: datetime) -> None:
             await notify_group_chat(
                 f"🫠 <b>Auction expired with available tokens!</b>\n\n"
                 f"<b>Swap:</b> {from_symbol} ➙ {want_symbol}\n"
-                f"<b>Available:</b> {kickable / 10 ** int(from_decimals):.5f} {from_symbol}\n\n"
+                f"<b>Available:</b> {kickable / 10 ** int(from_decimals):.5f} {from_symbol}\n"
+                f"<b>Network:</b> {chain_key()}\n\n"
                 f"<a href='{explorer_address_url()}{auction.address}'>🔗 View Auction</a>"
             )
 
