@@ -49,15 +49,15 @@ async def bot_startup(startup_state: StateSnapshot) -> None:
     #     for log in logs:
     #         await on_deployed_new_auction(log)
 
-    # TEST on_auction_kicked
-    for factory in factories():
-        for auction in auctions(factory):
-            event = auction._events_["AuctionKicked"][0]
-            logs = list(event.range(23768585, 23768587))
-            # logs = list(event.range(23148631, 23148633))  # legacy factory
-            # logs = list(event.range(412036835, 412036837))
-            for log in logs:
-                await on_auction_kicked(log)
+    # # TEST on_auction_kicked
+    # for factory in factories():
+    #     for auction in auctions(factory):
+    #         event = auction._events_["AuctionKicked"][0]
+    #         logs = list(event.range(23768585, 23768587))
+    #         # logs = list(event.range(23148631, 23148633))  # legacy factory
+    #         # logs = list(event.range(412036835, 412036837))
+    #         for log in logs:
+    #             await on_auction_kicked(log)
 
     # # TEST on_auction_take
     # for factory in factories():
