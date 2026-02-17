@@ -8,7 +8,7 @@ from ape_ethereum import multicall
 from silverback import SilverbackBot, StateSnapshot
 from silverback.exceptions import CircuitBreaker
 
-from bot.config import auctions, chain_key, enabled, explorer_address_url, explorer_tx_url, factories, safe_name
+from bot.config import auctions, cfg, chain_key, enabled, explorer_address_url, explorer_tx_url, factories, safe_name
 from bot.tg import ERROR_GROUP_CHAT_ID, notify_group_chat
 
 # =============================================================================
@@ -42,22 +42,22 @@ async def bot_startup(startup_state: StateSnapshot) -> None:
 
     # # TEST on_deployed_new_auction
     # for factory in factories():
-    #     # logs = list(factory.DeployedNewAuction.range(22745429, 22978002))
+    #     logs = list(factory.DeployedNewAuction.range(22745429, 22978002))
     #     # logs = list(factory.DeployedNewAuction.range(21378342, 21378344))  # legacy factory
-    #     # logs = list(factory.DeployedNewAuction.range(358476615, 358476617))  # arbi
-    #     logs = list(factory.DeployedNewAuction.range(34043016, 34043018))  # base
+    #     # logs = list(factory.DeployedNewAuction.range(428591079, 428591081))  # arbi
+    #     # logs = list(factory.DeployedNewAuction.range(34043016, 34043018))  # base
     #     for log in logs:
     #         await on_deployed_new_auction(log)
 
-    # # TEST on_auction_kicked
-    # for factory in factories():
-    #     for auction in auctions(factory):
-    #         event = auction._events_["AuctionKicked"][0]
-    #         logs = list(event.range(23120295, 23120559))
-    #         # logs = list(event.range(23148631, 23148633))  # legacy factory
-    #         # logs = list(event.range(412036835, 412036837))
-    #         for log in logs:
-    #             await on_auction_kicked(log)
+    # TEST on_auction_kicked
+    for factory in factories():
+        for auction in auctions(factory):
+            event = auction._events_["AuctionKicked"][0]
+            logs = list(event.range(23768585, 23768587))
+            # logs = list(event.range(23148631, 23148633))  # legacy factory
+            # logs = list(event.range(412036835, 412036837))
+            for log in logs:
+                await on_auction_kicked(log)
 
     # # TEST on_auction_take
     # for factory in factories():
@@ -83,10 +83,27 @@ async def bot_shutdown() -> None:
 # =============================================================================
 
 
-for factory in factories():
+# Collect all auctions and enabled tokens across all factories
+_all_auctions = []
+_all_token_addresses = []
+_all_auction_addresses = set()
 
-    @bot.on_(factory.DeployedNewAuction)
-    async def on_deployed_new_auction(event: ContractLog) -> None:
+for _factory in factories():
+    for _auction in auctions(_factory):
+        _all_auctions.append(_auction)
+        _all_auction_addresses.add(_auction.address)
+        for _token in enabled(_auction):
+            try:
+                _ = _token._events_["Transfer"][0]
+            except KeyError:
+                print(f"WARNING: Token {_token.address} does not have Transfer event in ABI, skipping...")
+                continue
+            if _token.address not in _all_token_addresses:
+                _all_token_addresses.append(_token.address)
+
+
+@bot.on_(factories()[0].DeployedNewAuction, from_addresses=cfg()["factories"])
+async def on_deployed_new_auction(event: ContractLog) -> None:
         await debug("working on on_deployed_new_auction...")
 
         auction = Contract(event.auction)
@@ -108,109 +125,107 @@ for factory in factories():
             f"<a href='{explorer_address_url()}{auction.address}'>🔗 View Auction</a>"
         )
 
-    for auction in auctions(factory):
 
-        @bot.on_(auction._events_["AuctionKicked"][0])  # For some strange reason can't use auction.AuctionKicked
-        async def on_auction_kicked(event: ContractLog) -> None:
-            await debug("working on on_auction_kicked...")
+if _all_auctions:
 
-            # Cache the auction contract
-            auction = Contract(event.contract_address)
+    @bot.on_(_all_auctions[0]._events_["AuctionKicked"][0], from_addresses=[a.address for a in _all_auctions])
+    async def on_auction_kicked(event: ContractLog) -> None:
+        await debug("working on on_auction_kicked...")
 
-            # Handle weirdness of event decoding
-            try:
-                from_token = Contract(event.get("from"))
-                available = int(event.available)
-            except Exception:
-                args = decode_auction_kicked(event.transaction_hash, event.log_index, event.contract_address)
-                from_token = Contract(args["from"])
-                available = int(args["available"])
+        # Cache the auction contract
+        auction = Contract(event.contract_address)
 
-            # Get the want token
-            want = Contract(auction.want())
+        # Handle weirdness of event decoding
+        try:
+            from_token = Contract(event.get("from"))
+            available = int(event.available)
+        except Exception:
+            args = decode_auction_kicked(event.transaction_hash, event.log_index, event.contract_address)
+            from_token = Contract(args["from"])
+            available = int(args["available"])
 
-            # Multicall for symbol + decimals
-            call = multicall.Call()
-            call.add(from_token.symbol)
-            call.add(from_token.decimals)
-            call.add(want.symbol)
-            from_symbol, from_decimals, want_symbol = call()
+        # Get the want token
+        want = Contract(auction.want())
 
+        # Multicall for symbol + decimals
+        call = multicall.Call()
+        call.add(from_token.symbol)
+        call.add(from_token.decimals)
+        call.add(want.symbol)
+        from_symbol, from_decimals, want_symbol = call()
+
+        await notify_group_chat(
+            f"🥾 <b>Auction kicked!</b>\n\n"
+            f"<b>Swap:</b> {from_symbol} ➙ {want_symbol}\n"
+            f"<b>Available:</b> {available / (10 ** int(from_decimals)):.2f} {from_symbol}\n"
+            f"<b>Network:</b> {chain_key()}\n\n"
+            f"<a href='{explorer_tx_url()}{event.transaction_hash}'>🔗 View Transaction</a>"
+        )
+
+        # Keep track of active auctions
+        pair = (auction, from_token)
+        if pair not in bot.state.active_auctions:
+            bot.state.active_auctions.append(pair)
+
+
+if _all_token_addresses:
+
+    @bot.on_(Contract(_all_token_addresses[0])._events_["Transfer"][0], from_addresses=_all_token_addresses)
+    async def on_auction_take(event: ContractLog) -> None:
+        await debug("working on on_auction_take...")
+
+        # From and who took + how much
+        auction, taker, amount = (event.get(event.abi.inputs[i].name) for i in range(3))
+
+        # Only process if from is a known auction address
+        if auction not in _all_auction_addresses:
+            return
+
+        # The from token
+        token = Contract(event.contract_address)
+
+        # Initialize the auction variable
+        auction = Contract(auction)
+
+        # Get the want token
+        want = Contract(auction.want())
+
+        # Multicall
+        call = multicall.Call()
+        call.add(token.symbol)
+        call.add(token.decimals)
+        call.add(want.symbol)
+        call.add(auction.available, token.address)
+        call.add(auction.receiver)
+        from_symbol, from_decimals, want_symbol, available, receiver = call()
+
+        if int(available) > 0:
+            # If still has available tokens, notify with the "partially taken" message
             await notify_group_chat(
-                f"🥾 <b>Auction kicked!</b>\n\n"
+                f"😐 <b>Auction partially taken!</b>\n\n"
                 f"<b>Swap:</b> {from_symbol} ➙ {want_symbol}\n"
-                f"<b>Available:</b> {available / (10 ** int(from_decimals)):.2f} {from_symbol}\n"
+                f"<b>Remaining:</b> {int(available) / (10 ** int(from_decimals)):.5f} {from_symbol}\n"
+                f"<b>Taker:</b> {safe_name(taker)}\n"
+                f"<b>Receiver:</b> {safe_name(receiver)}\n"
+                f"<b>Network:</b> {chain_key()}\n\n"
+                f"<a href='{explorer_tx_url()}{event.transaction_hash}'>🔗 View Transaction</a>"
+            )
+        else:
+            # Otherwise, notify with the "fully taken" message
+            await notify_group_chat(
+                f"🥳 <b>Auction fully taken!</b>\n\n"
+                f"<b>Swap:</b> {from_symbol} ➙ {want_symbol}\n"
+                f"<b>Amount:</b> {amount / (10 ** int(from_decimals)):.2f} {from_symbol}\n"
+                f"<b>Taker:</b> {safe_name(taker)}\n"
+                f"<b>Receiver:</b> {safe_name(receiver)}\n"
                 f"<b>Network:</b> {chain_key()}\n\n"
                 f"<a href='{explorer_tx_url()}{event.transaction_hash}'>🔗 View Transaction</a>"
             )
 
-            # Keep track of active auctions
-            pair = (auction, from_token)
-            if pair not in bot.state.active_auctions:
-                bot.state.active_auctions.append(pair)
-
-        for token in enabled(auction):
-            # Also for some strange reason can't always use token.Transfer
-            try:
-                event = token._events_["Transfer"][0]
-            except KeyError:
-                # Token contract may not have Transfer event in ABI (unverified contract, etc.)
-                print(f"WARNING: Token {token.address} does not have Transfer event in ABI, skipping...")
-                continue
-            first_arg = event.abi.inputs[0].name  # from/_from/sender/whatever else smart devs thought of
-
-            @bot.on_(event, filter_args={first_arg: auction.address})
-            async def on_auction_take(event: ContractLog) -> None:
-                await debug("working on on_auction_take...")
-
-                # From and who took + how much
-                auction, taker, amount = (event.get(event.abi.inputs[i].name) for i in range(3))
-
-                # The from token
-                token = Contract(event.contract_address)
-
-                # Initialize the auction variable
-                auction = Contract(auction)
-
-                # Get the want token
-                want = Contract(auction.want())
-
-                # Multicall
-                call = multicall.Call()
-                call.add(token.symbol)
-                call.add(token.decimals)
-                call.add(want.symbol)
-                call.add(auction.available, token.address)
-                call.add(auction.receiver)
-                from_symbol, from_decimals, want_symbol, available, receiver = call()
-
-                if int(available) > 0:
-                    # If still has available tokens, notify with the “partially taken” message
-                    await notify_group_chat(
-                        f"😐 <b>Auction partially taken!</b>\n\n"
-                        f"<b>Swap:</b> {from_symbol} ➙ {want_symbol}\n"
-                        f"<b>Remaining:</b> {int(available) / (10 ** int(from_decimals)):.5f} {from_symbol}\n"
-                        f"<b>Taker:</b> {safe_name(taker)}\n"
-                        f"<b>Receiver:</b> {safe_name(receiver)}\n"
-                        f"<b>Network:</b> {chain_key()}\n\n"
-                        f"<a href='{explorer_tx_url()}{event.transaction_hash}'>🔗 View Transaction</a>"
-                    )
-                else:
-                    # Otherwise, notify with the “fully taken” message
-                    await notify_group_chat(
-                        f"🥳 <b>Auction fully taken!</b>\n\n"
-                        f"<b>Swap:</b> {from_symbol} ➙ {want_symbol}\n"
-                        f"<b>Amount:</b> {amount / (10 ** int(from_decimals)):.2f} {from_symbol}\n"
-                        f"<b>Taker:</b> {safe_name(taker)}\n"
-                        f"<b>Receiver:</b> {safe_name(receiver)}\n"
-                        f"<b>Network:</b> {chain_key()}\n\n"
-                        f"<a href='{explorer_tx_url()}{event.transaction_hash}'>🔗 View Transaction</a>"
-                    )
-
-                    # Remove from tracking if present
-                    pair = (auction, token)
-                    if pair in bot.state.active_auctions:
-                        bot.state.active_auctions.remove(pair)
+            # Remove from tracking if present
+            pair = (auction, token)
+            if pair in bot.state.active_auctions:
+                bot.state.active_auctions.remove(pair)
 
 
 # =============================================================================
