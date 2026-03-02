@@ -1,3 +1,4 @@
+import os
 from collections.abc import Mapping, Sequence
 from typing import TypedDict, cast
 
@@ -9,6 +10,7 @@ class NetworkCfg(TypedDict):
     factories: Sequence[str]
     explorer: str
     known_addresses: dict[str, str]
+    uptime_push_key: str
 
 
 NETWORKS: Mapping[str, NetworkCfg] = {
@@ -31,6 +33,7 @@ NETWORKS: Mapping[str, NetworkCfg] = {
             "0xb911Fcce8D5AFCEc73E072653107260bb23C1eE8": "Yearn veCRV Fee Burner",
             "0xE08D97e151473A848C3d9CA3f323Cb720472D015": "c0ffeebabe.eth",
         },
+        "uptime_push_key": os.getenv("UPTIME_KUMA_KEY_ETHEREUM", ""),
     },
     "base": {
         "factories": [
@@ -39,6 +42,7 @@ NETWORKS: Mapping[str, NetworkCfg] = {
         ],
         "explorer": "https://basescan.org/",
         "known_addresses": {},
+        "uptime_push_key": os.getenv("UPTIME_KUMA_KEY_BASE", ""),
     },
     "arbitrum": {
         "factories": [
@@ -48,6 +52,7 @@ NETWORKS: Mapping[str, NetworkCfg] = {
         ],
         "explorer": "https://arbiscan.io/",
         "known_addresses": {},
+        "uptime_push_key": os.getenv("UPTIME_KUMA_KEY_ARBITRUM", ""),
     },
 }
 
@@ -103,3 +108,11 @@ def safe_name(address: str) -> str:
 
     # Fallback
     return known_address_name(address)
+
+
+def uptime_push_url() -> str | None:
+    host = os.getenv("UPTIME_KUMA_HOST", "")
+    key = cfg()["uptime_push_key"]
+    if not host or not key:
+        return None
+    return f"https://{host}/api/push/{key}?status=up&msg=OK&ping="

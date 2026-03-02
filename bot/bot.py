@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from urllib.request import urlopen
 
 from ape import Contract, chain
 from ape.types import ContractLog
@@ -7,7 +8,7 @@ from ape_ethereum import multicall
 from silverback import SilverbackBot, StateSnapshot
 from silverback.exceptions import CircuitBreaker
 
-from bot.config import auctions, chain_key, explorer_address_url, explorer_tx_url, factories, safe_name
+from bot.config import auctions, chain_key, explorer_address_url, explorer_tx_url, factories, safe_name, uptime_push_url
 from bot.tg import ERROR_GROUP_CHAT_ID, notify_group_chat
 from bot.utils import (
     add_auction,
@@ -29,6 +30,7 @@ bot = SilverbackBot()
 DAILY_RESTART_CRON = os.getenv("DAILY_RESTART_CRON", "30 13 * * *")  # every day at 13:30 UTC
 CHECK_EXPIRED_CRON = os.getenv("CHECK_EXPIRED_CRON", "0 * * * *")  # every hour
 CHECK_TAKES_CRON = os.getenv("CHECK_TAKES_CRON", "*/3 * * * *")  # every 3 minutes
+UPTIME_PING_CRON = os.getenv("UPTIME_PING_CRON", "*/9 * * * *")  # Every 9 minutes
 
 
 # =============================================================================
@@ -47,7 +49,7 @@ async def bot_startup(startup_state: StateSnapshot) -> None:
 
     # # TEST on_deployed_new_auction
     # for factory in factories():
-    #     logs = list(factory.DeployedNewAuction.range(24491720, 24491837))
+    #     logs = list(factory.DeployedNewAuction.range(24536014, 24536016))
     #     # logs = list(factory.DeployedNewAuction.range(21378342, 21378344))  # legacy factory
     #     # logs = list(factory.DeployedNewAuction.range(428591079, 428591081))  # arbi
     #     # logs = list(factory.DeployedNewAuction.range(34043016, 34043018))  # base
@@ -259,3 +261,14 @@ async def check_auction_takes(time: datetime) -> None:
                 # Remove from tracking
                 remove_auction(addr_pair)
                 break  # NOTE: will not notify about multiple takes within the same block
+
+
+@bot.cron(UPTIME_PING_CRON)  # type: ignore[untyped-decorator]
+async def ping_uptime_monitor(time: datetime) -> None:
+    url = uptime_push_url()
+    if not url:
+        return
+    try:
+        urlopen(url, timeout=10)  # noqa: S310
+    except Exception as e:
+        print(f"Uptime ping failed: {e}")
