@@ -9,6 +9,7 @@ from silverback import SilverbackBot, StateSnapshot
 from silverback.exceptions import CircuitBreaker
 
 from bot.config import auctions, chain_key, explorer_address_url, explorer_tx_url, factories, safe_name, uptime_push_url
+from bot.events import auction_events, factory_events
 from bot.tg import ERROR_GROUP_CHAT_ID, notify_group_chat
 from bot.utils import (
     add_auction,
@@ -94,7 +95,7 @@ _factories = factories()
 _all_auctions = [auction for factory in _factories for auction in auctions(factory)]
 
 
-@bot.on_(_factories[0].DeployedNewAuction, from_addresses=_factories)
+@bot.on_(factory_events.DeployedNewAuction, from_addresses=_factories)
 async def on_deployed_new_auction(event: ContractLog) -> None:
     await debug("working on on_deployed_new_auction...")
 
@@ -120,7 +121,7 @@ async def on_deployed_new_auction(event: ContractLog) -> None:
 
 if _all_auctions:
 
-    @bot.on_(_all_auctions[0].AuctionKicked, from_addresses=_all_auctions)
+    @bot.on_(auction_events.AuctionKicked, from_addresses=_all_auctions)
     async def on_auction_kicked(event: ContractLog) -> None:
         await debug("working on on_auction_kicked...")
 
