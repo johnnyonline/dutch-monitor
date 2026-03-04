@@ -48,6 +48,9 @@ cache-id.txt
 .ruff_cache
 .DS_Store
 
+# Bot state
+bot/state.json
+
 # Ape stuff
 .build/
 .silverback-images/
