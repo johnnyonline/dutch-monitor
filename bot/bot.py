@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 
 from ape import Contract, chain
 from ape.types import ContractLog
@@ -32,6 +32,7 @@ DAILY_RESTART_CRON = os.getenv("DAILY_RESTART_CRON", "30 13 * * *")  # every day
 CHECK_EXPIRED_CRON = os.getenv("CHECK_EXPIRED_CRON", "0 * * * *")  # every hour
 CHECK_TAKES_CRON = os.getenv("CHECK_TAKES_CRON", "*/3 * * * *")  # every 3 minutes
 UPTIME_PING_CRON = os.getenv("UPTIME_PING_CRON", "*/9 * * * *")  # Every 9 minutes
+# UPTIME_PING_CRON = os.getenv("UPTIME_PING_CRON", "* * * * *")  # Every 9 minutes
 
 
 # =============================================================================
@@ -270,6 +271,7 @@ async def ping_uptime_monitor(time: datetime) -> None:
     if not url:
         return
     try:
-        urlopen(url, timeout=10)  # noqa: S310
+        req = Request(url, headers={"User-Agent": "dutch-monitor-bot"})  # noqa: S310
+        urlopen(req, timeout=10)  # noqa: S310
     except Exception as e:
         print(f"Uptime ping failed: {e}")
