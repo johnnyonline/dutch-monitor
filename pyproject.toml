@@ -12,7 +12,7 @@ dependencies = [
     "eth-ape==0.8.45",
     #"silverback==0.7.35",
     "silverback @ git+https://github.com/ApeWorX/silverback.git@feat/multiple-addresses",
-    "ape-etherscan==0.8.5",
+    #"ape-etherscan==0.8.5",
 ]
 
 [tool.setuptools.packages.find]

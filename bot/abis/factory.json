@@ -1,0 +1,18 @@
+[
+    {
+        "name": "getAllAuctions",
+        "type": "function",
+        "inputs": [],
+        "outputs": [{"name": "", "type": "address[]"}],
+        "stateMutability": "view"
+    },
+    {
+        "anonymous": false,
+        "name": "DeployedNewAuction",
+        "type": "event",
+        "inputs": [
+            {"indexed": true, "name": "auction", "type": "address"},
+            {"indexed": true, "name": "want", "type": "address"}
+        ]
+    }
+]

@@ -51,9 +51,9 @@ async def bot_startup(startup_state: StateSnapshot) -> None:
 
     # # TEST on_deployed_new_auction
     # for factory in factories():
-    #     logs = list(factory.DeployedNewAuction.range(24536014, 24536016))
+    #     # logs = list(factory.DeployedNewAuction.range(24536014, 24536016))
     #     # logs = list(factory.DeployedNewAuction.range(21378342, 21378344))  # legacy factory
-    #     # logs = list(factory.DeployedNewAuction.range(428591079, 428591081))  # arbi
+    #     logs = list(factory.DeployedNewAuction.range(428591079, 428591081))  # arbi
     #     # logs = list(factory.DeployedNewAuction.range(34043016, 34043018))  # base
     #     for log in logs:
     #         await on_deployed_new_auction(log)
@@ -62,9 +62,9 @@ async def bot_startup(startup_state: StateSnapshot) -> None:
     # for factory in factories():
     #     for auction in auctions(factory):
     #         event = auction._events_["AuctionKicked"][0]
-    #         logs = list(event.range(24491900, 24491906))
+    #         # logs = list(event.range(24491900, 24491906))
     #         # logs = list(event.range(23148631, 23148633))  # legacy factory
-    #         # logs = list(event.range(412036835, 412036837))
+    #         logs = list(event.range(402980793, 402980795))  # arbi
     #         for log in logs:
     #             await on_auction_kicked(log)
 
@@ -100,8 +100,8 @@ _all_auctions = [auction for factory in _factories for auction in auctions(facto
 async def on_deployed_new_auction(event: ContractLog) -> None:
     await debug("working on on_deployed_new_auction...")
 
-    auction = Contract(event.auction)
-    want = Contract(event.want)
+    auction = Contract(event.auction, abi="bot/abis/auction.json")
+    want = Contract(event.want, abi="bot/abis/erc20.json")
 
     # Figure out the deployer address
     receipt = chain.provider.get_receipt(event.transaction_hash)
@@ -127,7 +127,7 @@ if _all_auctions:
         await debug("working on on_auction_kicked...")
 
         # Cache the auction contract
-        auction = Contract(event.contract_address)
+        auction = Contract(event.contract_address, abi="bot/abis/auction.json")
 
         # Handle weirdness of event decoding
         try:
@@ -139,7 +139,7 @@ if _all_auctions:
             available = int(args["available"])
 
         # Get the want token
-        want = Contract(auction.want())
+        want = Contract(auction.want(), abi="bot/abis/erc20.json")
 
         # Multicall for symbol + decimals
         call = multicall.Call()
@@ -179,7 +179,7 @@ async def check_expired_with_available(time: datetime) -> None:
         return
 
     # Reconstruct contracts
-    pairs = [(Contract(a), Contract(t, abi="bot/abis/erc20.json")) for a, t in active]
+    pairs = [(Contract(a, abi="bot/abis/auction.json"), Contract(t, abi="bot/abis/erc20.json")) for a, t in active]
 
     # Build multicall for all `kickable(from_token.address)`
     call = multicall.Call()
@@ -191,7 +191,7 @@ async def check_expired_with_available(time: datetime) -> None:
             continue
 
         from_symbol, from_decimals, want_symbol = (
-            multicall.Call().add(from_token.symbol).add(from_token.decimals).add(Contract(auction.want()).symbol)()
+            multicall.Call().add(from_token.symbol).add(from_token.decimals).add(Contract(auction.want(), abi="bot/abis/erc20.json").symbol)()
         )
         await notify_group_chat(
             f"🫠 <b>Auction expired with available tokens!</b>\n\n"
@@ -215,7 +215,7 @@ async def check_auction_takes(time: datetime) -> None:
         return
 
     for addr_pair in active[:]:
-        auction = Contract(addr_pair[0])
+        auction = Contract(addr_pair[0], abi="bot/abis/auction.json")
         from_token = Contract(addr_pair[1], abi="bot/abis/erc20.json")
 
         event = from_token._events_["Transfer"][0]
@@ -228,7 +228,7 @@ async def check_auction_takes(time: datetime) -> None:
             amount = int(log[event.abi.inputs[2].name])
 
             # Get the want token
-            want = Contract(auction.want())
+            want = Contract(auction.want(), abi="bot/abis/erc20.json")
 
             # Multicall
             call = multicall.Call()

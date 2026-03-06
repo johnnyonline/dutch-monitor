@@ -66,15 +66,15 @@ def cfg() -> NetworkCfg:
 
 
 def factories() -> list[ContractInstance]:
-    return [Contract(address) for address in cfg()["factories"]]
+    return [Contract(address, abi="bot/abis/factory.json") for address in cfg()["factories"]]
 
 
 def auctions(factory: ContractInstance) -> list[ContractInstance]:
-    return [Contract(address) for address in factory.getAllAuctions()]
+    return [Contract(address, abi="bot/abis/auction.json") for address in factory.getAllAuctions()]
 
 
 def enabled(auction: ContractInstance) -> list[ContractInstance]:
-    return [Contract(address) for address in auction.getAllEnabledAuctions()]
+    return [Contract(address, abi="bot/abis/auction.json") for address in auction.getAllEnabledAuctions()]
 
 
 def explorer_address_url() -> str:
@@ -94,7 +94,7 @@ def known_address_name(address: str) -> str:
 def safe_name(address: str) -> str:
     # Try contract name
     try:
-        return str(Contract(address).name())
+        return str(Contract(address, abi="bot/abis/erc20.json").name())
     except Exception:
         pass
 
